@@ -279,8 +279,8 @@ public:
     // ========== EDGE COMPUTATION - DIRECT CHANGES - for first iter ==========
     pre_compute_timer.start();
 
-    timer refine_segment_timer;
-    refine_segment_timer.start();
+    // timer refine_segment_timer;
+    // refine_segment_timer.start();
     parallel_for(long i = 0; i < edge_additions.size; i++) {
       uintV source = edge_additions.E[i].source;
       uintV destination = edge_additions.E[i].destination;
@@ -334,9 +334,9 @@ public:
       }
     }
 
-    cout << "Edge addition segment time of iteration " << 1 << ": "<< refine_segment_timer.stop() << "\n";
+    // cout << "Edge addition segment time of iteration " << 1 << ": "<< refine_segment_timer.stop() << "\n";
 
-    refine_segment_timer.start();
+    // refine_segment_timer.start();
     parallel_for(long i = 0; i < edge_deletions.size; i++) {
       uintV source = edge_deletions.E[i].source;
       uintV destination = edge_deletions.E[i].destination;
@@ -388,7 +388,7 @@ public:
         }
       }
     }
-    cout << "Edge deletion segment time of iteration " << 1 << ": "<< refine_segment_timer.stop() << "\n";
+    // cout << "Edge deletion segment time of iteration " << 1 << ": "<< refine_segment_timer.stop() << "\n";
     pre_compute_time = pre_compute_timer.stop();
 
     // =============== INCREMENTAL COMPUTE - REFINEMENT START ================
@@ -435,7 +435,7 @@ public:
       }
       copy_time += phase_timer.next();
       // ========== EDGE COMPUTATION - TRANSITIVE CHANGES ==========
-      refine_segment_timer.start();
+      // refine_segment_timer.start();
       if ((use_source_contribution) && (iter == 1)) {
         // Compute source contribution for first iteration
         parallel_for(uintV u = 0; u < n; u++) {
@@ -500,10 +500,10 @@ public:
         }
       }
       phase_time = phase_timer.next();
-      cout << "Edge transitive segment time of iteration " << iter << ": "<< refine_segment_timer.stop() << "\n";
+      // cout << "Edge transitive segment time of iteration " << iter << ": "<< refine_segment_timer.stop() << "\n";
 
       // ========== VERTEX COMPUTATION  ==========
-      refine_segment_timer.start();
+      // refine_segment_timer.start();
       bool use_delta_next_iteration = shouldUseDelta(iter + 1);
       parallel_for(uintV v = 0; v < n; v++) {
         // changed vertices need to be processed
@@ -578,10 +578,10 @@ public:
         }
       }
       phase_time = phase_timer.next();
-      cout << "Vertex update segment time of iteration " << iter << ": "<< refine_segment_timer.stop() << "\n";
+      // cout << "Vertex update segment time of iteration " << iter << ": "<< refine_segment_timer.stop() << "\n";
 
       // ========== EDGE COMPUTATION - DIRECT CHANGES - for next iter ==========
-      refine_segment_timer.start();
+      // refine_segment_timer.start();
       bool has_direct_changes = false;
       parallel_for(long i = 0; i < edge_additions.size; i++) {
         uintV source = edge_additions.E[i].source;
@@ -630,9 +630,9 @@ public:
           }
         }
       }
-      cout << "Edge addition segment time of iteration " << iter + 1 << ": "<< refine_segment_timer.stop() << "\n";
+      // cout << "Edge addition segment time of iteration " << iter + 1 << ": "<< refine_segment_timer.stop() << "\n";
 
-      refine_segment_timer.start();
+      // refine_segment_timer.start();
       parallel_for(long i = 0; i < edge_deletions.size; i++) {
         uintV source = edge_deletions.E[i].source;
         uintV destination = edge_deletions.E[i].destination;
@@ -682,7 +682,7 @@ public:
         }
       }
       phase_time = phase_timer.next();
-      cout << "Edge deletion segment time of iteration " << iter + 1 << ": "<< refine_segment_timer.stop() << "\n";
+      // cout << "Edge deletion segment time of iteration " << iter + 1 << ": "<< refine_segment_timer.stop() << "\n";
 
       vertexSubset temp_vs(n, frontier_curr);
       frontier_curr_vs = temp_vs;

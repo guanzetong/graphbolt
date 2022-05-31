@@ -3,18 +3,18 @@
 INTE = -DEDGELONG
 
 #compilers
-PCC = g++-5
+PCC = g++-9
 PCFLAGS = -std=c++14
 
 # dependencies
-INIT_GEN = initial_graph_generator
+STREAM_GEN = stream_generator
 
 .PHONY: all clean
 
-all: $(INIT_GEN)
+all: $(STREAM_GEN)
 
-% : %.C $(COMMON) $(LOCAL_COMMON)
+% : %.cpp
 	$(PCC) $(PCFLAGS) -o $@ $<
 
 clean :
-	rm -f *.o $(INIT_GEN)
+	rm -f *.o $(STREAM_GEN)
