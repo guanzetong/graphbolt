@@ -13,33 +13,34 @@ int main (int argc, char *argv[])
 {
     commandLine P(argc, argv);
     string in_path = P.getOptionValue("-inPath", IN_PATH);
-    string initial_path = P.getOptionValue("-initPath", INITIAL_PATH);
+    // string initial_path = P.getOptionValue("-initPath", INITIAL_PATH);
     string stream_path = P.getOptionValue("-streamPath", STREAM_PATH);
 
     ifstream f_in;
-    ofstream f_initial;
+    // ofstream f_initial;
     ofstream f_stream;
     string line;
 
     f_in.open(in_path);
     if(!f_in.is_open()) return 1;
 
-    f_initial.open(initial_path);
-    if(!f_initial.is_open()) return 1;
-    f_initial << "Number, Initial Time, \n";
-    cout << "Initial File Created!\n";
+    // f_initial.open(initial_path);
+    // if(!f_initial.is_open()) return 1;
+    // f_initial << "Number, Initial Time, \n";
+    // cout << "Initial File Created!\n";
 
     f_stream.open(stream_path);
     if(!f_stream.is_open()) return 1;
-    f_stream << "Number,Batch Size,Deletion Time,Addition Time,Deletion Num,Addition Num,Update Time,Increment Time,\n";
+    f_stream << "Number,Batch Size,Deletion Time,Addition Time,Deletion Num,Addition Num,Initial Time,Update Time,Increment Time,\n";
 
     bool init_flag = false;
+    double initial_time;
     double time;
     double addition_time;
     double deletion_time;
     int int_buffer;
 
-    int initial_number = 1;
+    // int initial_number = 1;
     int stream_number = 1;
     
     while (f_in)
@@ -48,9 +49,9 @@ int main (int argc, char *argv[])
         if (line.find("Initial graph processing") != string::npos)
         {
             cout << line << "\n";
-            time = stod(line.substr(line.find(":")+2));
-            f_initial << initial_number << "," << time << ",\n";
-            initial_number++;
+            initial_time = stod(line.substr(line.find(":")+2));
+            // f_initial << initial_number << "," << time << ",\n";
+            // initial_number++;
         }
         else if (line.find("Batch Size:") != string::npos)
         {
@@ -76,7 +77,7 @@ int main (int argc, char *argv[])
         else if (line.find("Edge Deletions in batch") != string::npos)
         {
             int_buffer = stoi(line.substr(line.find(":")+2));
-            f_stream << int_buffer << "," << (addition_time + deletion_time) << ",";
+            f_stream << int_buffer << "," << initial_time << "," << (addition_time + deletion_time) << ",";
         }
         else if (line.find("Finished batch") != string::npos)
         {
@@ -87,7 +88,7 @@ int main (int argc, char *argv[])
     }
 
     f_in.close();
-    f_initial.close();
+    // f_initial.close();
     f_stream.close();
     return 0;
 }

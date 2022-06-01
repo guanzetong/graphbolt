@@ -8,5 +8,5 @@ do
     STREAM_PATH="../inputs/stream_graph_$BATCH_SIZE.txt"
     echo "Running Test with $INIT_GRAPH and $STREAM_PATH"
     # echo $STREAM_PATH
-    ./PageRank -numberOfUpdateBatches 10 -nEdges $BATCH_SIZE -maxIters 1000 -streamPath $STREAM_PATH $INIT_GRAPH >> program.out
+    ./PageRank -numberOfUpdateBatches 100 -nEdges $BATCH_SIZE -maxIters 1000 -streamPath $STREAM_PATH $INIT_GRAPH >> program.out
 done
