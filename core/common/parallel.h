@@ -77,6 +77,7 @@ static void setWorkers(int n) {
 // openmp
 #elif defined(OPENMP)
 #include <omp.h>
+#include <cassert>
 #define cilk_spawn
 #define cilk_sync
 #define parallel_main main

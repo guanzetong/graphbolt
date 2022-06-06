@@ -62,7 +62,7 @@ void initial_graph_generator(ofstream &fout, edge_t *edge_list, long int edge_nu
     }
 }
 
-void batch_generator(ofstream &fout, long int batch_size, edge_t *loaded_edge_list, edge_t *idle_edge_list, long int &loaded_edge_num, long int &idle_edge_num)
+void batch_generator(ofstream &fout, long int batch_size, edge_t *loaded_edge_list, edge_t *idle_edge_list, long int &loaded_edge_num, long int &idle_edge_num, bool random_flag)
 {
     edge_t *temp_edge_list = new edge_t[batch_size];
     long int edge_addition_num;
@@ -72,16 +72,25 @@ void batch_generator(ofstream &fout, long int batch_size, edge_t *loaded_edge_li
     shuffle_edge_list(loaded_edge_list, loaded_edge_num);
     shuffle_edge_list(idle_edge_list, idle_edge_num);
 
-    while (true)
+    if (random_flag)
     {
-        edge_addition_num = random() % (batch_size + 1);
-        edge_deletion_num = batch_size - edge_addition_num;
-        if ((edge_addition_num <= idle_edge_num)
-        && (edge_deletion_num <= loaded_edge_num))
+        while (true)
         {
-            break;
+            edge_addition_num = random() % (batch_size + 1);
+            edge_deletion_num = batch_size - edge_addition_num;
+            if ((edge_addition_num <= idle_edge_num)
+            && (edge_deletion_num <= loaded_edge_num))
+            {
+                break;
+            }
         }
     }
+    else
+    {
+        edge_addition_num = batch_size / 2;
+        edge_deletion_num = batch_size / 2;
+    }
+
 
     // Remove edge additions from idle_edge_list
     for (size_t j = idle_edge_num - edge_addition_num; j < idle_edge_num ; j++)
@@ -125,6 +134,7 @@ int main (int argc, char *argv[])
     string basic_graph_file = P.getOptionValue("-basicGraphFile", BASIC_GRAPH_FILE);
     string init_graph_file = P.getOptionValue("-initGraphFile", INIT_GRAPH_FILE);
     string stream_graph_file = P.getOptionValue("-streamGraphFile", STREAM_GRAPH_FILE);
+    bool random_flag = P.getOption("-random");
 
     // Basic Graph input file in SNAP format
     ifstream fin;
@@ -194,7 +204,7 @@ int main (int argc, char *argv[])
     cout << "Generating randomized streaming batches : " << batch_num << "\n";
     for (size_t i = 0; i < batch_num; i++)
     {
-        batch_generator(fout, batch_size, loaded_edge_list, idle_edge_list, loaded_edge_num, idle_edge_num);
+        batch_generator(fout, batch_size, loaded_edge_list, idle_edge_list, loaded_edge_num, idle_edge_num, random_flag);
         cout << "Batch No." << i+1 << " generated : " << batch_size << "\n";
     }
     fout.close();
