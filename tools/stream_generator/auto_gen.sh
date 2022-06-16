@@ -13,13 +13,25 @@ BASIC_GRAPH="../../inputs/soc-pokec-relationships.txt"
 #     echo "Generated"
 # done
 
+# cd ../converters/
+# pwd
+# for batch_size in ${BATCH_SIZE_ARRAY[@]}
+# do
+#     SNAP="../../inputs/init_graph_$batch_size.snap"
+#     ADJ="../../inputs/init_graph_$batch_size.adj"
+#     echo "Converting with batch size : $batch_size, batch number : $BATCH_NUM"
+#     ./SNAPtoAdjConverter $SNAP $ADJ
+#     echo "Converted"
+# done
+
 cd ../converters/
 pwd
-for batch_size in ${BATCH_SIZE_ARRAY[@]}
+batch_size=1000
+for batch_num in {1..100..1}
 do
-    SNAP="../../inputs/init_graph_$batch_size.snap"
-    ADJ="../../inputs/init_graph_$batch_size.adj"
-    echo "Converting with batch size : $batch_size, batch number : $BATCH_NUM"
+    SNAP="../../inputs/snapshot_pokec_1k/snapshot_${batch_size}_${batch_num}.snap"
+    ADJ="../../inputs/snapshot_pokec_1k/snapshot_${batch_size}_${batch_num}.adj"
+    echo "Converting with batch size : $batch_size, batch number : $batch_num"
     ./SNAPtoAdjConverter $SNAP $ADJ
     echo "Converted"
 done

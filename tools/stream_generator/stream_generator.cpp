@@ -13,6 +13,7 @@
 
 #define INIT_GRAPH_FILE "init_graph.snap"
 #define STREAM_GRAPH_FILE "stream_graph.txt"
+#define SNAPSHOT_PATH "snapshot.snap"
 #define BATCH_SIZE 1000
 #define BATCH_NUM 10
 
@@ -124,6 +125,14 @@ void batch_generator(ofstream &fout, long int batch_size, edge_t *loaded_edge_li
     cout << "Edge deletions : " << edge_deletion_num << "\n";
 }
 
+void graph_snapshot_generator(ofstream &fout, edge_t *loaded_edge_list, long int &loaded_edge_num)
+{
+    for (size_t i = 0; i < loaded_edge_num; i++)
+    {
+        fout << loaded_edge_list[i].src_id << "\t" << loaded_edge_list[i].des_id << "\n";
+    }
+}
+
 int main (int argc, char *argv[]) 
 {
     // Arguments
@@ -134,6 +143,7 @@ int main (int argc, char *argv[])
     string basic_graph_file = P.getOptionValue("-basicGraphFile", BASIC_GRAPH_FILE);
     string init_graph_file = P.getOptionValue("-initGraphFile", INIT_GRAPH_FILE);
     string stream_graph_file = P.getOptionValue("-streamGraphFile", STREAM_GRAPH_FILE);
+    string snapshot_path = P.getOptionValue("-snapshotPath", SNAPSHOT_PATH);
     bool random_flag = P.getOption("-random");
 
     // Basic Graph input file in SNAP format
@@ -159,6 +169,9 @@ int main (int argc, char *argv[])
     long int loaded_edge_num;
     long int idle_edge_num;
 
+    ofstream snapshot_fout;
+    string snapshot_file;
+
     // Read the basic graph from file and store into the dynamic matrix
     fin.open(basic_graph_file);
     edge_list_idx = 0;
@@ -168,7 +181,7 @@ int main (int argc, char *argv[])
         getline(fin, line);
         if ((line[0] != '#') && (line.size() > 0))
         {
-            tab_pos = line.find('\t', 0);
+            tab_pos = line.find(' ', 0);
             src_str = line.substr(0, tab_pos);
             des_str = line.substr((tab_pos+1), line.size());
             // cout << "Source ID: " << src_str << "\tDest ID: " << des_str << "\n";
@@ -206,6 +219,11 @@ int main (int argc, char *argv[])
     {
         batch_generator(fout, batch_size, loaded_edge_list, idle_edge_list, loaded_edge_num, idle_edge_num, random_flag);
         cout << "Batch No." << i+1 << " generated : " << batch_size << "\n";
+
+        snapshot_file = snapshot_path + "snapshot_" + to_string(batch_size) + "_" + to_string(i+1) + ".snap";
+        snapshot_fout.open(snapshot_file);
+        graph_snapshot_generator(snapshot_fout, loaded_edge_list, loaded_edge_num);
+        snapshot_fout.close();
     }
     fout.close();
     
