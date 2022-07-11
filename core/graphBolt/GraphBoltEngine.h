@@ -26,6 +26,7 @@
 #include "AdaptiveExecutor.h"
 #include "ingestor.h"
 #include <vector>
+#include "../../../sniper/include/sim_api.h"
 
 enum UpdateType { edge_addition_enum, edge_deletion_enum };
 
@@ -552,7 +553,11 @@ public:
       edgeArray &edge_deletions = ingestor.getEdgeDeletions();
       // ingestor.edge_additions and ingestor.edge_deletions have been added
       // to the graph datastructure. Now, refine using it.
+      SimRoiStart();
+      SimNamedMarker(4, "begin");
       deltaCompute(edge_additions, edge_deletions);
+      SimNamedMarker(5, "end");
+      SimRoiEnd();
     }
     freeTemporaryStructures();
   }

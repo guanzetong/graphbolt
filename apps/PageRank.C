@@ -300,5 +300,7 @@ template <class vertex> void compute(graph<vertex> &G, commandLine config) {
   engine.init();
   cout << "Finished initializing engine\n";
 
+  // SimRoiStart();
   engine.run();
+  // SimRoiEnd();
 }

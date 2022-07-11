@@ -5,8 +5,8 @@
 
 #define IN_PATH "../../apps/program.out"
 #define SNAPSHOT_PATH "../../apps/snapshot.out"
-#define INITIAL_PATH "time_analysis_initial.csv"
-#define STREAM_PATH "time_analysis_stream.csv"
+// #define INITIAL_PATH "time_analysis_initial.csv"
+#define OUTPUT_PATH "time_analysis.csv"
 
 using namespace std;
 
@@ -28,7 +28,7 @@ int main (int argc, char *argv[])
     string in_path = P.getOptionValue("-inPath", IN_PATH);
     string snapshot_path = P.getOptionValue("-snapshotPath", SNAPSHOT_PATH);
     // string initial_path = P.getOptionValue("-initPath", INITIAL_PATH);
-    string stream_path = P.getOptionValue("-streamPath", STREAM_PATH);
+    string output_path = P.getOptionValue("-outPath", OUTPUT_PATH);
 
     ifstream f_in;
     // ofstream f_initial;
@@ -53,6 +53,14 @@ int main (int argc, char *argv[])
     double update_time;
     double increment_time;
     double snapshot_time;
+
+    double update_time_sum = 0;
+    double increment_time_sum = 0;
+    double snapshot_time_sum = 0;
+
+    double update_time_average;
+    double increment_time_average;
+    double snapshot_time_average;
 
     data_entry time_list [100];
 
@@ -105,6 +113,8 @@ int main (int argc, char *argv[])
             time_list[batch_num].initial_time = initial_time;
             time_list[batch_num].update_time = update_time;
             time_list[batch_num].increment_time = increment_time;
+            update_time_sum += update_time;
+            increment_time_sum += increment_time;
             batch_num++;
         }
     }
@@ -121,16 +131,20 @@ int main (int argc, char *argv[])
         {
             snapshot_time = stod(line.substr(line.find(":")+2));
             time_list[batch_num].snapshot_time = snapshot_time;
+            snapshot_time_sum += snapshot_time;
             batch_num++;
         }
     }
     f_in.close();
 
+    update_time_average = update_time_sum / batch_num;
+    increment_time_average = increment_time_sum / batch_num;
+    snapshot_time_average = snapshot_time_sum / batch_num;
 
-    f_stream.open(stream_path);
+    f_stream.open(output_path);
     if(!f_stream.is_open()) return 1;
     f_stream << "Number,Batch Size,Deletion Time,Addition Time,Deletion Num,Addition Num,Initial Time,Update Time,Increment Time,Snapshot Time\n";
-    for (size_t i = 0; i < 100; i++)
+    for (size_t i = 0; i < batch_num; i++)
     {
         f_stream << (i+1) << ",";
         f_stream << time_list[i].batch_size << ",";
@@ -143,7 +157,12 @@ int main (int argc, char *argv[])
         f_stream << time_list[i].increment_time << ",";
         f_stream << time_list[i].snapshot_time << "\n";
     }
-
+    f_stream << "Average," << ",,,,," ;
+    f_stream << initial_time << ",";
+    f_stream << update_time_average << ",";
+    f_stream << increment_time_average << ",";
+    f_stream << snapshot_time_average << "\n";
     f_stream.close();
+
     return 0;
 }

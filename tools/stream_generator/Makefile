@@ -5,6 +5,7 @@ INTE = -DEDGELONG
 #compilers
 PCC = g++-9
 PCFLAGS = -std=c++14
+OMP = -fopenmp
 
 # dependencies
 STREAM_GEN = stream_generator
@@ -12,6 +13,9 @@ STREAM_GEN = stream_generator
 .PHONY: all clean
 
 all: $(STREAM_GEN)
+
+graph_diff: graph_diff.cpp
+	$(PCC) $(PCFLAGS) $(OMP) -o $@ $<
 
 % : %.cpp
 	$(PCC) $(PCFLAGS) -o $@ $<
