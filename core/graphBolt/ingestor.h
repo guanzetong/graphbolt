@@ -27,6 +27,7 @@
 #include "../graph/IO.h"
 #include "../graph/graph.h"
 #include <string>
+#include "../../../sniper/include/sim_api.h"
 
 /**
  * Used to extract values from the binary stream
@@ -526,6 +527,11 @@ public:
       return false;
     }
 
+    #ifdef EDGEDELETION
+    SimRoiStart();
+    SimNamedMarker(4, "begin");
+    #endif
+    
     double deletions_map_creation_time = 0;
     timer1.start();
     deletions_data.updateWithEdgesArray(edge_deletions_temp);
@@ -537,6 +543,16 @@ public:
     edge_deletions_temp.del();
     cout << "Edge deletion time : "
          << deletions_map_creation_time + timer1.next() << "\n";
+
+    #ifdef EDGEDELETION
+    SimNamedMarker(5, "end");
+    SimRoiEnd();
+    #endif
+
+    #ifdef EDGEADDITION
+    SimRoiStart();
+    SimNamedMarker(4, "begin");
+    #endif
 
     timer1.start();
     if (edge_additions.maxVertex >= n) {
@@ -551,6 +567,12 @@ public:
     my_graph.addVertices(edge_additions.maxVertex);
     edge_additions = my_graph.addEdges(edge_additions, updated_vertices);
     cout << "Edge addition time : " << timer1.next() << "\n";
+
+    #ifdef EDGEADDITION
+    SimNamedMarker(5, "end");
+    SimRoiEnd();
+    #endif
+
     if ((edge_additions.size > 0) || (edge_deletions.size > 0)) {
       return true;
     }

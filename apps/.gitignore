@@ -1,7 +1,7 @@
 *.dSYM
 /SSSP
 /LabelPropagation
-/PageRank
+/PageRank*
 /CF
 /COEM
 /BFS

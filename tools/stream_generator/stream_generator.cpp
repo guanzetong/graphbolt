@@ -173,8 +173,8 @@ long int read_graph_file(string file_path, edge_t *edge_list, long int max_edge_
         getline(fin, line);
         if ((line[0] != '#') && (line.size() > 0))
         {
-            // tab_pos = line.find('\t', 0);
-            tab_pos = line.find(' ', 0);
+            tab_pos = line.find('\t', 0);
+            // tab_pos = line.find(' ', 0);
             // cout << "TAB : " << tab_pos << "\n";
             src_str = line.substr(0, tab_pos);
             des_str = line.substr((tab_pos + 1), line.size());

@@ -541,7 +541,17 @@ public:
   // RUN AND INITIAL COMPUTE
   // ======================================================================
   void run() {
+    #ifdef INITIALCOMPUTE
+    SimRoiStart();
+    SimNamedMarker(4, "begin");
+    #endif
+
     initialCompute();
+
+    #ifdef INITIALCOMPUTE
+    SimNamedMarker(5, "end");
+    SimRoiEnd();
+    #endif
 
     // ======================================================================
     // Incremental Compute - Get the next update batch from ingestor
@@ -553,11 +563,17 @@ public:
       edgeArray &edge_deletions = ingestor.getEdgeDeletions();
       // ingestor.edge_additions and ingestor.edge_deletions have been added
       // to the graph datastructure. Now, refine using it.
+      #ifdef DELTACOMPUTE
       SimRoiStart();
       SimNamedMarker(4, "begin");
+      #endif
+
       deltaCompute(edge_additions, edge_deletions);
+      
+      #ifdef DELTACOMPUTE
       SimNamedMarker(5, "end");
       SimRoiEnd();
+      #endif
     }
     freeTemporaryStructures();
   }

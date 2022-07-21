@@ -85,6 +85,7 @@ public:
         // initialize timers
         {
           phase_timer.start();
+          iteration_timer.start();
           misc_time = 0;
           copy_time = 0;
         }
@@ -214,6 +215,7 @@ public:
         frontier_curr_vs = temp_vs;
         misc_time += phase_timer.next();
         iteration_time = iteration_timer.stop();
+        cout << "TRA iter time [" << iter << "]\t: " << iteration_time << "\n";
 
         if (ae_enabled && iter == 1) {
           adaptive_executor.setApproximateTimeForCurrIter(iteration_time);
@@ -716,6 +718,7 @@ public:
       }
       misc_time += phase_timer.stop();
       iteration_time += iteration_timer.stop();
+      cout << "DEL iter time [" << iter << "]\t: " << iteration_time << "\n";
     }
 
     cout << "Finished batch : " << full_timer.stop() << "\n";

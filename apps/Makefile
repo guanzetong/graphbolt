@@ -13,9 +13,9 @@ INTE = -DEDGELONG
 #compilers
 $(info ************  Using CILK ************)
 PCC = g++-5
-# PARALLELFLAGS = -fcilkplus -lcilkrts -DCILK
+CILKFLAGS = -fcilkplus -lcilkrts -DCILK
 PARALLELFLAGS = -fopenmp -DOPENMP
-PCFLAGS = -std=c++14 $(PARALLELFLAGS) -g -O3 $(INTV) $(INTE) $(EDGEDATA) -I/home/ztguan/sniper/include
+PCFLAGS = -std=c++14 -g -O3 $(INTV) $(INTE) $(EDGEDATA) -I/home/ztguan/sniper/include
 # LDFLAGS = -L../lib/mimalloc/out/release -lmimalloc 
 STATIC = /home/ztguan/graphbolt/lib/mimalloc/out/release/libmimalloc.a
 
@@ -34,8 +34,14 @@ ALL=PageRank LabelPropagation CF COEM SSSP BFS
 
 all: $(ALL)
 
+# PageRank_CILK_% : PageRank.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
+# 	$(PCC) $(PCFLAGS) $(CILKFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+
+# PageRank_% : PageRank.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
+# 	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+
 % : %.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-	$(PCC) $(PCFLAGS) $(STATIC) $< $(LDFLAGS) -o $@
+	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -o $@
 
 .PHONY : clean
 
