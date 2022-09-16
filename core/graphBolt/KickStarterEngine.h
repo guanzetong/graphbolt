@@ -26,6 +26,7 @@
 #include "../common/utils.h"
 #include "ingestor.h"
 #include <vector>
+#include "../../../sniper/include/sim_api.h"
 
 #define MAX_LEVEL 65535
 #define MAX_PARENT 4294967295
@@ -297,12 +298,34 @@ public:
   }
 
   void run() {
+    #ifdef INITIALCOMPUTE
+    SimRoiStart();
+    SimNamedMarker(4, "begin");
+    #endif
+
     initialCompute();
+
+    #ifdef INITIALCOMPUTE
+    SimNamedMarker(5, "end");
+    SimRoiEnd();
+    #endif
+
     ingestor.validateAndOpenFifo();
     while (ingestor.processNextBatch()) {
       edgeArray &edge_additions = ingestor.getEdgeAdditions();
       edgeArray &edge_deletions = ingestor.getEdgeDeletions();
+
+      #ifdef DELTACOMPUTE
+      SimRoiStart();
+      SimNamedMarker(4, "begin");
+      #endif
+
       deltaCompute(edge_additions, edge_deletions);
+
+      #ifdef DELTACOMPUTE
+      SimNamedMarker(5, "end");
+      SimRoiEnd();
+      #endif
     }
   }
 

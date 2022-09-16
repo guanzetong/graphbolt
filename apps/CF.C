@@ -171,6 +171,7 @@ public:
     parallel_for(uintV i = 0; i < partition_flags_array_size; i++) {
       partition_flags[i] = 0;
     }
+    cout << "partition_flags_array_size : " << partition_flags_array_size << "\n";
     parallel_for(long i = 0; i < len; i++) {
       long vertexId = atoll(W.Strings[i]);
       if (vertexId > partition_flags_array_size) {

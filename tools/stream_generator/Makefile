@@ -14,7 +14,10 @@ STREAM_GEN = stream_generator
 
 all: $(STREAM_GEN)
 
-graph_diff: graph_diff.cpp
+partition_gen: partition_gen.cpp
+	$(PCC) $(PCFLAGS) $(OMP) -o $@ $<
+
+seeds_gen: seeds_gen.cpp
 	$(PCC) $(PCFLAGS) $(OMP) -o $@ $<
 
 % : %.cpp

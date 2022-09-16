@@ -144,9 +144,9 @@ public:
                                contrib_change, global_info);
               if (ret) {
                 if (use_lock) {
-                  vertex_locks[v].writeLock();
+                  // vertex_locks[v].writeLock();
                   addToAggregation(contrib_change, delta[v], global_info);
-                  vertex_locks[v].unlock();
+                  // vertex_locks[v].unlock();
                 } else {
                   addToAggregationAtomic(contrib_change, delta[v], global_info);
                 }
@@ -237,7 +237,7 @@ public:
   // DELTACOMPUTE
   // ======================================================================
   void deltaCompute(edgeArray &edge_additions, edgeArray &edge_deletions) {
-    timer iteration_timer, phase_timer, full_timer, pre_compute_timer;
+    timer iteration_timer, phase_timer, full_timer, pre_compute_timer, par_for_timer;
     double misc_time, copy_time, phase_time, iteration_time, pre_compute_time;
     iteration_time = 0;
     full_timer.start();
@@ -249,6 +249,7 @@ public:
     }
 
     // Reset values before incremental computation
+    par_for_timer.start();
     parallel_for(uintV v = 0; v < n; v++) {
       frontier_curr[v] = 0;
       frontier_next[v] = 0;
@@ -265,6 +266,7 @@ public:
             aggregationValueIdentity<AggregationValueType>();
       }
     }
+    cout << "Reset values time: " << par_for_timer.stop() << "\n";
 
     // ==================== UPDATE GLOBALINFO ===============================
     // deltaCompute/initCompute Save a copy of global_info before we lose any
@@ -281,8 +283,7 @@ public:
     // ========== EDGE COMPUTATION - DIRECT CHANGES - for first iter ==========
     pre_compute_timer.start();
 
-    // timer refine_segment_timer;
-    // refine_segment_timer.start();
+    par_for_timer.start();
     parallel_for(long i = 0; i < edge_additions.size; i++) {
       uintV source = edge_additions.E[i].source;
       uintV destination = edge_additions.E[i].destination;
@@ -322,10 +323,10 @@ public:
                          vertex_values[0][source], contrib_change, global_info);
         if (ret) {
           if (use_lock) {
-            vertex_locks[destination].writeLock();
+            // vertex_locks[destination].writeLock();
             addToAggregation(contrib_change, delta[destination],
                              global_info_old);
-            vertex_locks[destination].unlock();
+            // vertex_locks[destination].unlock();
           } else {
             addToAggregationAtomic(contrib_change, delta[destination],
                                    global_info_old);
@@ -336,9 +337,9 @@ public:
       }
     }
 
-    // cout << "Edge addition segment time of iteration " << 1 << ": "<< refine_segment_timer.stop() << "\n";
+    cout << "Edge addition segment time of iteration " << 1 << ": "<< par_for_timer.stop() << "\n";
 
-    // refine_segment_timer.start();
+    par_for_timer.start();
     parallel_for(long i = 0; i < edge_deletions.size; i++) {
       uintV source = edge_deletions.E[i].source;
       uintV destination = edge_deletions.E[i].destination;
@@ -377,10 +378,10 @@ public:
                                 global_info_old);
         if (ret) {
           if (use_lock) {
-            vertex_locks[destination].writeLock();
+            // vertex_locks[destination].writeLock();
             removeFromAggregation(contrib_change, delta[destination],
                                   global_info_old);
-            vertex_locks[destination].unlock();
+            // vertex_locks[destination].unlock();
           } else {
             removeFromAggregationAtomic(contrib_change, delta[destination],
                                         global_info_old);
@@ -390,7 +391,7 @@ public:
         }
       }
     }
-    // cout << "Edge deletion segment time of iteration " << 1 << ": "<< refine_segment_timer.stop() << "\n";
+    cout << "Edge deletion segment time of iteration " << 1 << ": "<< par_for_timer.stop() << "\n";
     pre_compute_time = pre_compute_timer.stop();
 
     // =============== INCREMENTAL COMPUTE - REFINEMENT START ================
@@ -427,9 +428,11 @@ public:
         vertex_value_old_next = temp1;
 
         if (iter <= converged_iteration) {
+          par_for_timer.start();
           parallel_for(uintV v = 0; v < n; v++) {
             vertex_value_old_next[v] = vertex_values[iter][v];
           }
+          cout << "Copy time: " << par_for_timer.stop() << "\n";
         } else {
           converged_iteration = performSwitch(iter);
           break;
@@ -437,9 +440,9 @@ public:
       }
       copy_time += phase_timer.next();
       // ========== EDGE COMPUTATION - TRANSITIVE CHANGES ==========
-      // refine_segment_timer.start();
       if ((use_source_contribution) && (iter == 1)) {
         // Compute source contribution for first iteration
+        par_for_timer.start();
         parallel_for(uintV u = 0; u < n; u++) {
           if (frontier_curr[u]) {
             // compute source change in contribution
@@ -459,8 +462,10 @@ public:
                 contrib_change, source_change_in_contribution[u], global_info);
           }
         }
+        cout << "Edge transitive segment 1st time of iteration " << iter << ": "<< par_for_timer.stop() << "\n";
       }
 
+      par_for_timer.start();
       parallel_for(uintV u = 0; u < n; u++) {
         if (frontier_curr[u]) {
           // check for propagate and retract for the vertices.
@@ -484,11 +489,11 @@ public:
 
             if (ret) {
               if (use_lock) {
-                vertex_locks[v].writeLock();
+                // vertex_locks[v].writeLock();
                 if (ret) {
                   addToAggregation(contrib_change, delta[v], global_info);
                 }
-                vertex_locks[v].unlock();
+                // vertex_locks[v].unlock();
 
               } else {
                 if (ret) {
@@ -502,11 +507,11 @@ public:
         }
       }
       phase_time = phase_timer.next();
-      // cout << "Edge transitive segment time of iteration " << iter << ": "<< refine_segment_timer.stop() << "\n";
+      cout << "Edge transitive segment time of iteration " << iter << ": "<< par_for_timer.stop() << "\n";
 
       // ========== VERTEX COMPUTATION  ==========
-      // refine_segment_timer.start();
       bool use_delta_next_iteration = shouldUseDelta(iter + 1);
+      par_for_timer.start();
       parallel_for(uintV v = 0; v < n; v++) {
         // changed vertices need to be processed
         frontier_curr[v] = 0;
@@ -580,11 +585,11 @@ public:
         }
       }
       phase_time = phase_timer.next();
-      // cout << "Vertex update segment time of iteration " << iter << ": "<< refine_segment_timer.stop() << "\n";
+      cout << "Vertex update segment time of iteration " << iter << ": "<< par_for_timer.stop() << "\n";
 
       // ========== EDGE COMPUTATION - DIRECT CHANGES - for next iter ==========
-      // refine_segment_timer.start();
       bool has_direct_changes = false;
+      par_for_timer.start();
       parallel_for(long i = 0; i < edge_additions.size; i++) {
         uintV source = edge_additions.E[i].source;
         uintV destination = edge_additions.E[i].destination;
@@ -617,10 +622,10 @@ public:
 
           if (ret) {
             if (use_lock) {
-              vertex_locks[destination].writeLock();
+              // vertex_locks[destination].writeLock();
               addToAggregation(contrib_change, delta[destination],
                                global_info_old);
-              vertex_locks[destination].unlock();
+              // vertex_locks[destination].unlock();
             } else {
               addToAggregationAtomic(contrib_change, delta[destination],
                                      global_info_old);
@@ -632,9 +637,9 @@ public:
           }
         }
       }
-      // cout << "Edge addition segment time of iteration " << iter + 1 << ": "<< refine_segment_timer.stop() << "\n";
+      cout << "Edge addition segment time of iteration " << iter + 1 << ": "<< par_for_timer.stop() << "\n";
 
-      // refine_segment_timer.start();
+      par_for_timer.start();
       parallel_for(long i = 0; i < edge_deletions.size; i++) {
         uintV source = edge_deletions.E[i].source;
         uintV destination = edge_deletions.E[i].destination;
@@ -667,10 +672,10 @@ public:
 
           if (ret) {
             if (use_lock) {
-              vertex_locks[destination].writeLock();
+              // vertex_locks[destination].writeLock();
               removeFromAggregation(contrib_change, delta[destination],
                                     global_info_old);
-              vertex_locks[destination].unlock();
+              // vertex_locks[destination].unlock();
 
             } else {
               removeFromAggregationAtomic(contrib_change, delta[destination],
@@ -684,7 +689,7 @@ public:
         }
       }
       phase_time = phase_timer.next();
-      // cout << "Edge deletion segment time of iteration " << iter + 1 << ": "<< refine_segment_timer.stop() << "\n";
+      cout << "Edge deletion segment time of iteration " << iter + 1 << ": "<< par_for_timer.stop() << "\n";
 
       vertexSubset temp_vs(n, frontier_curr);
       frontier_curr_vs = temp_vs;
@@ -696,6 +701,8 @@ public:
       if (!has_direct_changes && frontier_curr_vs.isEmpty()) {
         // There are no more active vertices
         if (iter == converged_iteration) {
+          iteration_time += iteration_timer.stop();
+          cout << "DEL iter time [" << iter << "]\t: " << iteration_time << "\n";
           break;
         } else if (iter > converged_iteration) {
           assert(("Missed switching to Traditional incremental computing when "

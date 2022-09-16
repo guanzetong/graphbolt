@@ -127,6 +127,7 @@ public:
       for (int iter = start_iteration; iter < max_iterations; iter++) {
         // initialize timers
         {
+          iteration_timer.start();
           phase_timer.start();
           misc_time = 0;
           copy_time = 0;
@@ -196,9 +197,9 @@ public:
               // lock if needed
               if (ret) {
                 if (use_lock) {
-                  vertex_locks[v].writeLock();
+                  // vertex_locks[v].writeLock();
                   addToAggregation(contrib_change, delta[v], global_info);
-                  vertex_locks[v].unlock();
+                  // vertex_locks[v].unlock();
                 } else {
                   addToAggregationAtomic(contrib_change, delta[v], global_info);
                 }
@@ -263,6 +264,7 @@ public:
         frontier_curr_vs = temp_vs;
         misc_time += phase_timer.next();
         iteration_time = iteration_timer.stop();
+        cout << "TRA iter time [" << iter << "]\t: " << iteration_time << "\n";
 
         if (ae_enabled && iter == 1) {
           adaptive_executor.setApproximateTimeForCurrIter(iteration_time);
@@ -367,10 +369,10 @@ public:
                          vertex_values[0][source], contrib_change, global_info);
         if (ret) {
           if (use_lock) {
-            vertex_locks[destination].writeLock();
+            // vertex_locks[destination].writeLock();
             addToAggregation(contrib_change, delta[destination],
                              global_info_old);
-            vertex_locks[destination].unlock();
+            // vertex_locks[destination].unlock();
           } else {
             addToAggregationAtomic(contrib_change, delta[destination],
                                    global_info_old);
@@ -424,10 +426,10 @@ public:
                          vertex_values[0][source], contrib_change, global_info);
         if (ret) {
           if (use_lock) {
-            vertex_locks[destination].writeLock();
+            // vertex_locks[destination].writeLock();
             removeFromAggregation(contrib_change, delta[destination],
                                   global_info_old);
-            vertex_locks[destination].unlock();
+            // vertex_locks[destination].unlock();
           } else {
             removeFromAggregationAtomic(contrib_change, delta[destination],
                                         global_info_old);
@@ -562,14 +564,14 @@ public:
 
             if (ret || ret_old) {
               if (use_lock) {
-                vertex_locks[v].writeLock();
+                // vertex_locks[v].writeLock();
                 if (ret_old) {
                   removeFromAggregation(to_retract, delta[v], global_info_old);
                 }
                 if (ret) {
                   addToAggregation(to_propagate, delta[v], global_info);
                 }
-                vertex_locks[v].unlock();
+                // vertex_locks[v].unlock();
 
               } else {
                 removeFromAggregationAtomic(to_retract, delta[v],
@@ -710,10 +712,10 @@ public:
           }
           if (ret) {
             if (use_lock) {
-              vertex_locks[destination].writeLock();
+              // vertex_locks[destination].writeLock();
               addToAggregation(contrib_change_old, delta[destination],
                                global_info_old);
-              vertex_locks[destination].unlock();
+              // vertex_locks[destination].unlock();
             } else {
               addToAggregationAtomic(contrib_change_old, delta[destination],
                                      global_info_old);
@@ -771,10 +773,10 @@ public:
           }
           if (ret) {
             if (use_lock) {
-              vertex_locks[destination].writeLock();
+              // vertex_locks[destination].writeLock();
               removeFromAggregation(contrib_change_old, delta[destination],
                                     global_info_old);
-              vertex_locks[destination].unlock();
+              // vertex_locks[destination].unlock();
 
             } else {
               removeFromAggregationAtomic(contrib_change_old,
@@ -799,6 +801,8 @@ public:
       // Convergence check
       if (!has_direct_changes && frontier_curr_vs.isEmpty()) {
         if (iter == converged_iteration) {
+          iteration_time += iteration_timer.stop();
+          cout << "DEL iter time [" << iter << "]\t: " << iteration_time << "\n";
           break;
         } else if (iter > converged_iteration) {
           assert(
@@ -820,6 +824,8 @@ public:
       }
       misc_time += phase_timer.stop();
       iteration_time += iteration_timer.stop();
+      cout << "DEL iter time [" << iter << "]\t: " << iteration_time << "\n";
+
     }
 
     cout << "Finished batch : " << full_timer.stop() << "\n";
