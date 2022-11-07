@@ -6,3 +6,6 @@
 /COEM
 /BFS
 *.out
+*DELTACOMPUTE
+*INITIALCOMPUTE
+*_out*

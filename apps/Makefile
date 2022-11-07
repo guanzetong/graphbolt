@@ -10,14 +10,26 @@ endif
 
 INTE = -DEDGELONG
 
-#compilers
-$(info ************  Using CILK ************)
+# Compilers
 PCC = g++-5
-CILKFLAGS = -fcilkplus -lcilkrts -DCILK
-PARALLELFLAGS = -fopenmp -DOPENMP
-PCFLAGS = -std=c++14 -g -O3 $(INTV) $(INTE) $(EDGEDATA) -I/home/ztguan/sniper/include
+
+# Parallel Programming API
+# $(info ************  Using CILK ************)
+# PARFLAGS = -fcilkplus -lcilkrts -DCILK
+$(info ************  Using OpenMP ************)
+PARFLAGS = -fopenmp -DOPENMP
+
+# Sniper path
+SNIPER = -I/home/ztguan/sniper/include
+
+# Flags
+PCFLAGS = -std=c++14 -g -O3 $(INTV) $(INTE) $(EDGEDATA)
+
+# For running on local machine
+# $(info ************  Dynamic mimalloc, local machine only ************)
 # LDFLAGS = -L../lib/mimalloc/out/release -lmimalloc 
-STATIC = /home/ztguan/graphbolt/lib/mimalloc/out/release/libmimalloc.a
+$(info ************  Static mimalloc, local machine or Sniper ************)
+LDFLAGS = /home/ztguan/graphbolt/lib/mimalloc/out/release/libmimalloc.a
 
 # dependencies
 COMMON=../core/common/binary_search.h ../core/common/bitsetscheduler.h ../core/common/blockRadixSort.h ../core/common/densebitset.h ../core/common/gettime.h ../core/common/index_map.h ../core/common/matrix.h ../core/common/maybe.h ../core/common/parallel.h ../core/common/parseCommandLine.h ../core/common/transpose.h ../core/common/quickSort.h ../core/common/rwlock.h ../core/common/sequence.h ../core/common/utils.h
@@ -30,30 +42,33 @@ OTHERS=../core/main.h
 
 ALL=PageRank LabelPropagation CF COEM SSSP BFS
 
-# make
+# Make
 
 all: $(ALL)
 
-# PageRank_CILK_% : PageRank.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-# 	$(PCC) $(PCFLAGS) $(CILKFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+# Define the Region-Of-Interest (ROI) for Sniper. Have no effect when running on local machine
+# - *_INITIALCOMPUTE : ROI is the initial computation
+# - *_DELTACOMPUTE: ROI is the incremental computation
+# e.g. "make PageRank_INITIALCOMPUTE" produce an executable that mark the initial (before applying any batch) computation of PageRank
 
 PageRank_% : PageRank.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+	$(PCC) $(PCFLAGS) $(SNIPER) $(PARFLAGS) $(LDFLAGS) $< $(LDFLAGS) -D$* -o $@
 
 CF_NORMAL_% : CF.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+	$(PCC) $(PCFLAGS) $(SNIPER) $(PARFLAGS) $(LDFLAGS) $< $(LDFLAGS) -D$* -o $@
 
 CF_% : CF.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+	$(PCC) $(PCFLAGS) $(SNIPER) $(PARFLAGS) $(LDFLAGS) $< $(LDFLAGS) -D$* -o $@
 
 SSSP_%: SSSP.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+	$(PCC) $(PCFLAGS) $(SNIPER) $(PARFLAGS) $(LDFLAGS) $< $(LDFLAGS) -D$* -o $@
 
 BFS_%: BFS.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -D$* -o $@
+	$(PCC) $(PCFLAGS) $(SNIPER) $(PARFLAGS) $(LDFLAGS) $< $(LDFLAGS) -D$* -o $@
 
+# Normal compilation. No ROI.
 % : %.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
-	$(PCC) $(PCFLAGS) $(PARALLELFLAGS) $(STATIC) $< $(LDFLAGS) -o $@
+	$(PCC) $(PCFLAGS) $(SNIPER) $(PARFLAGS) $(LDFLAGS) $< $(LDFLAGS) -o $@
 
 .PHONY : clean
 
