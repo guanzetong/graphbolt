@@ -14,8 +14,8 @@ INTE = -DEDGELONG
 PCC = g++-5
 
 # Parallel Programming API
-$(info ************  Using CILK ************)
-PARFLAGS = -fcilkplus -lcilkrts -DCILK
+# $(info ************  Using CILK ************)
+# PARFLAGS = -fcilkplus -lcilkrts -DCILK
 $(info ************  Using OpenMP ************)
 PARFLAGS = -fopenmp -DOPENMP
 
@@ -26,8 +26,8 @@ SNIPER = -I/home/ztguan/sniper/include
 PCFLAGS = -std=c++14 -g -O3 $(INTV) $(INTE) $(EDGEDATA)
 
 # mimalloc
-$(info ************  Dynamic mimalloc, local machine only ************)
-LDFLAGS = -L../lib/mimalloc/out/release -lmimalloc 
+# $(info ************  Dynamic mimalloc, local machine only ************)
+# LDFLAGS = -L../lib/mimalloc/out/release -lmimalloc 
 $(info ************  Static mimalloc, local machine or Sniper ************)
 LDFLAGS = ../lib/mimalloc/out/release/libmimalloc.a
 
