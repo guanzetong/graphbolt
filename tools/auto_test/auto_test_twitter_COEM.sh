@@ -5,7 +5,6 @@ export LD_PRELOAD=/home/ztguan/graphbolt/lib/mimalloc/out/release/libmimalloc.so
 
 INIT_GRAPH="../../../../data2/ztguan/graphbolt/twitter_follower/init_graph.adj"
 PARTITION_FILE="../../../../data2/ztguan/graphbolt/twitter_follower/partition.txt"
-# PARTITION_FILE="../inputs/partition_empty.txt"
 SEEDS_FILE="../../../../data2/ztguan/graphbolt/twitter_follower/seeds.txt"
 for DIR in ../../../../data2/ztguan/graphbolt/twitter_follower/*/
 do
