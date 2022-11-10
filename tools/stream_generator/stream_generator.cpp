@@ -29,32 +29,22 @@ void shuffle_edge_list(edge_t *edge_list, long int edge_num)
 {
     unsigned seed = 0;
     shuffle(edge_list, edge_list + edge_num, default_random_engine(seed));
-    // for (size_t i = 0; i < edge_num; i++)
-    // {
-    //     cout << "src: " << edge_list[i].src_id << "\tdes: " << edge_list[i].des_id << "\n";
-    // }
 }
-
-// void mutate_swap (edge_t *edge_list, long int loaded_edge_num, long int batch_size)
-// {
-
-//     edge_t *temp = new edge_t[batch_size/2];
-//     memcpy((void *)temp, (void *)edge_list, (batch_size/2)*sizeof(edge_t));
-//     memcpy((void *)edge_list, (void *)(edge_list+loaded_edge_num), (batch_size/2)*sizeof(edge_t));
-//     memcpy((void *)(edge_list+loaded_edge_num), (void *)temp, (batch_size/2)*sizeof(edge_t));
-//     delete [] temp;
-// }
 
 long int initial_graph_generator(string init_graph_file, string idle_graph_file, edge_t *edge_list, long int edge_num, edge_t *loaded_edge_list, edge_t *idle_edge_list)
 {
-    ofstream fout;
+    ofstream fout; // Output graph file stream
 
     fout.open(init_graph_file);
     if (!fout.is_open())
         return 0;
+
     // Shuffle the edge_list
+    // The lower half are in the initial graph
+    // The higher half are in the idle graph
     shuffle_edge_list(edge_list, edge_num);
-    // Store loaded edge list
+
+    // Write to initial graph file
     long int loaded_edge_num = edge_num / 2;
     cout << "Loaded edges in initial graph : " << loaded_edge_num << "\n";
     cout << "Writing the initial graph to file " << init_graph_file << "\n";
@@ -69,6 +59,8 @@ long int initial_graph_generator(string init_graph_file, string idle_graph_file,
     fout.open(idle_graph_file);
     if (!fout.is_open())
         return 0;
+
+    // Write to idle graph file
     cout << "Writing the idle graph to file " << init_graph_file << "\n";
     // Store idle edge list
     for (size_t i = loaded_edge_num; i < edge_num; i++)
@@ -85,13 +77,15 @@ long int initial_graph_generator(string init_graph_file, string idle_graph_file,
 void batch_generator(ofstream &fout, long int batch_size, edge_t *loaded_edge_list, edge_t *idle_edge_list, long int &loaded_edge_num, long int &idle_edge_num, bool random_flag)
 {
     edge_t *temp_edge_list = new edge_t[batch_size];
-    long int edge_addition_num;
-    long int edge_deletion_num;
+    long int edge_addition_num; // Number of edge additions in the batch
+    long int edge_deletion_num; // Number of edge deletions in the batch
 
-    // Shuffle edge lists
+    // Shuffle both loaded graph and idle graph
     shuffle_edge_list(loaded_edge_list, loaded_edge_num);
     shuffle_edge_list(idle_edge_list, idle_edge_num);
 
+    // If random number of additions and deletions is chosen
+    // The size of graph is possible to change during streaming
     if (random_flag)
     {
         while (true)
@@ -152,18 +146,16 @@ void graph_snapshot_generator(ofstream &fout, edge_t *loaded_edge_list, long int
 
 long int read_graph_file(string file_path, edge_t *edge_list, long int max_edge_num)
 {
-    long int edge_list_idx;
-    ifstream fin;
-    // Line buffer
-    string line;
-    // TAB position in the line to extract src and des IDs
-    size_t tab_pos;
-    // Src ID
-    string src_str;
-    long int src_int;
-    // Des ID
-    string des_str;
-    long int des_int;
+    long int edge_list_idx; // Edge list index to record how many edges have been read
+    ifstream fin;           // Input graph file stream
+    string line;            // Line buffer
+    size_t tab_pos;         // TAB position in the line to extract Src and Des IDs.
+                            // Note that in some dataset, the Src and Des are deliminated by comma.
+    string src_str;         // Src ID in string
+    long int src_int;       // Src ID in int
+    string des_str;         // Des ID in string
+    long int des_int;       // Des ID in int
+
     fin.open(file_path);
     edge_list_idx = 0;
     if (!fin.is_open())
@@ -171,22 +163,20 @@ long int read_graph_file(string file_path, edge_t *edge_list, long int max_edge_
     while (!fin.eof())
     {
         getline(fin, line);
+        // If the line is not a comment or null
         if ((line[0] != '#') && (line.size() > 0))
         {
+            // Find the TAB that deliminates Src and Des
+            // If the original dataset use a different deliminator,
+            // '\t' should be replaced.
             tab_pos = line.find('\t', 0);
-            // tab_pos = line.find(' ', 0);
-            // cout << "TAB : " << tab_pos << "\n";
+
             src_str = line.substr(0, tab_pos);
             des_str = line.substr((tab_pos + 1), line.size());
-            // cout << "Source ID: " << src_str << "\tDest ID: " << des_str << "\n";
             src_int = stoi(src_str);
             des_int = stoi(des_str);
-            // cout << "Source ID: " << src_int << "\tDest ID: "<< des_int << "\n";
-            // cout << "Prev: " << p[src_int][des_int] << "\n";
-            // p[src_int][des_int] = true;
             edge_list[edge_list_idx].src_id = src_int;
             edge_list[edge_list_idx].des_id = des_int;
-            // cout << "Curr: " << p[src_int][des_int] << "\n";
             edge_list_idx++;
             if (edge_list_idx >= max_edge_num)
                 break;
@@ -201,37 +191,64 @@ int main(int argc, char *argv[])
 {
     // Arguments
     commandLine P(argc, argv);
+
+    // - The number of edges in the original graph
     long int max_edge_num = P.getOptionLongValue("-maxEdgeNum", MAX_EDGE_NUM);
+
+    // - The number of edges (additions + deletions) in a batch
     long int batch_size = P.getOptionLongValue("-batchSize", BATCH_SIZE);
+
+    // - The number of batches in the stream
     long int batch_num = P.getOptionLongValue("-batchNum", BATCH_NUM);
+    
+    // - The path to the original graph dataset
     string basic_graph_file = P.getOptionValue("-basicGraphFile", BASIC_GRAPH_FILE);
+
+    // - The path to the initial graph dataset (if there is no initial graph dataset yet, 
+    //   this is an output path. Otherwise, this is an input path)
     string init_graph_file = P.getOptionValue("-initGraphFile", INIT_GRAPH_FILE);
+
+    // - The path to the idle graph dataset (if there is no initial graph dataset yet, 
+    //   this is an output path. Otherwise, this is an input path). Initial + Idle = Original
     string idle_graph_file = P.getOptionValue("-idleGraphFile", IDLE_GRAPH_FILE);
+
+    // - The path to the streaming graph dataset, following the format defined in the GraphBolt's README
     string stream_graph_file = P.getOptionValue("-streamGraphFile", STREAM_GRAPH_FILE);
+
+    // - The path to the snapshot graph dataset (aka the graph structure after applying each batch)
     string snapshot_path = P.getOptionValue("-snapshotPath", SNAPSHOT_PATH);
+
+    // - Indicate whether the number of additions and deletions in a batch is randomized. 
+    //   0: equal number of additions and deletions in a batch, 1: random number.
     bool random_flag = P.getOption("-random");
+
+    // - Indicate whether the initial graph dataset exists. If it exists, then use the existing dataset. 
+    //   Otherwise, generate the initial graph dataset.
     bool read_from_file = P.getOption("-readFile");
 
-    // Basic Graph input file in SNAP format
-    ifstream fin;
+    // Variables
+    long int edge_num;                                   // Number of edges in the original graph
+    ofstream fout;                                       // Output file stream for streaming dataset
+    edge_t *loaded_edge_list = new edge_t[max_edge_num]; // Store the loaded edges
+    edge_t *idle_edge_list = new edge_t[max_edge_num];   // Store the idle edges
+    long int loaded_edge_num;                            // Number of loaded edges
+    long int idle_edge_num;                              // Number of idle edges
 
-    // Edge list
-    long int edge_num;
-    // Initial graph structure: randomly sample 50% of edges from basic graph
-    ofstream fout;
-    edge_t *loaded_edge_list = new edge_t[max_edge_num];
-    edge_t *idle_edge_list = new edge_t[max_edge_num];
-    long int loaded_edge_num;
-    long int idle_edge_num;
+    ofstream snapshot_fout;                              // Output file stream for snapshot
+    string snapshot_file;                                // Path to snapshot dataset
 
-    ofstream snapshot_fout;
-    string snapshot_file;
+    // Establish initial graph structure
 
+    // There exists a initial and a idle graph dataset
+    // -> Read the initial and idle dataset into loaded_edge_list and idle_edge_list
     if (read_from_file)
     {
         loaded_edge_num = read_graph_file(init_graph_file, loaded_edge_list, max_edge_num);
         idle_edge_num = read_graph_file(idle_graph_file, idle_edge_list, max_edge_num);
     }
+    // There is no initial and idle graph dataset
+    // -> Read the original dataset, randomly generate a initial graph dataset and a idle dataset.
+    //    The size of the initial graph dataset is half the size of the original dataset.
     else
     {
         edge_t *edge_list = new edge_t[max_edge_num];
@@ -244,16 +261,18 @@ int main(int argc, char *argv[])
         delete[] edge_list;
     }
 
-    // Generate Stream of edges
+    // Generate streaming batches
     fout.open(stream_graph_file);
     if (!fout.is_open())
         return 1;
     cout << "Generating randomized streaming batches : " << batch_num << "\n";
     for (size_t i = 0; i < batch_num; i++)
     {
+        // Generate a batch
         batch_generator(fout, batch_size, loaded_edge_list, idle_edge_list, loaded_edge_num, idle_edge_num, random_flag);
         cout << "Batch No." << i + 1 << " generated : " << batch_size << "\n";
 
+        // Generate a snapshot dataset after applying the batch, using the previous snapshot and the current batch
         snapshot_file = snapshot_path + "snapshot_" + to_string(i + 1) + ".snap";
         snapshot_fout.open(snapshot_file);
         graph_snapshot_generator(snapshot_fout, loaded_edge_list, loaded_edge_num);
@@ -261,6 +280,7 @@ int main(int argc, char *argv[])
     }
     fout.close();
 
+    // Clean up
     delete[] loaded_edge_list;
     delete[] idle_edge_list;
     return 0;
