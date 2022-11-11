@@ -1,36 +1,50 @@
 echo "Starting Auto experiment"
-cd ../../apps/
-make COEM
 export LD_PRELOAD=/home/ztguan/graphbolt/lib/mimalloc/out/release/libmimalloc.so
 
-INIT_GRAPH="../../../../data2/ztguan/graphbolt/twitter_follower/init_graph.adj"
-PARTITION_FILE="../../../../data2/ztguan/graphbolt/twitter_follower/partition.txt"
-SEEDS_FILE="../../../../data2/ztguan/graphbolt/twitter_follower/seeds.txt"
+# Compile executable
+cd ../../apps/
+make COEM
+
+# Specify Paths to graph dataset directory
+DATASET_PATH="../../../../data2/ztguan/graphbolt/twitter_follower"
+
+# Set path to initial graph
+INIT_GRAPH="$DATASET_PATH/init_graph.adj"
+
+# Set path to partition info
+# It is only applicable to some algorithms that require the graph to be partitioned in to 2 parts
+# e.g. COEM, CF
+PARTITION_FILE="$DATASET_PATH/partition.txt"
+
+# Set path to seed vertices info
+# It is only applicable to some algorithms that require explicitly defined seeds
+# e.g. LabelPropagation, COEM
+SEEDS_FILE="$DATASET_PATH/seeds.txt"
 
 # Iterate over the directory of dataset
 # The folder containing streams of different batch size are named the batch size
-for DIR in ../../../../data2/ztguan/graphbolt/twitter_follower/*/
+for DIR in $DATASET_PATH/*/
 do
     # Extract the batch size from folder name
     BATCH_SIZE=$(echo $DIR | cut -d '/' -f 9)
     echo $BATCH_SIZE
 
     # Set path to streaming batches
-    STREAM_PATH="../../../../data2/ztguan/graphbolt/twitter_follower/$BATCH_SIZE/stream_graph.txt"
+    STREAM_PATH="$DATASET_PATH/$BATCH_SIZE/stream_graph.txt"
 
     # Empty stream is for running on snapshots
     EMPTY_STREAM_PATH="../inputs/stream_graph_empty.txt"
 
     # Set path to snapshot dataset
-    SNAPSHOT_PATH="../../../../data2/ztguan/graphbolt/twitter_follower/$BATCH_SIZE/snapshot"
+    SNAPSHOT_PATH="$DATASET_PATH/$BATCH_SIZE/snapshot"
 
     echo "Running Test with $INIT_GRAPH and $STREAM_PATH"
 
     # Iterate over different number of cores (threads) if you want
     # Normally the performance gain vanishes above 64 threads.
 
-    # for CORE_NUM in {16..48..16}
-    # do
+    for CORE_NUM in {16..64..16}
+    do
         CORE_NUM=64
         echo "Running with $CORE_NUM cores ..."
 
@@ -66,6 +80,5 @@ do
         ./time_analysis -inPath $IN_PATH -snapshotPath $SNAPSHOT_OUT_PATH -outPath $OUT_PATH -iterPath $ITER_PATH
         
         cd ../../apps/
-        # pwd
-    # done
+    done
 done
