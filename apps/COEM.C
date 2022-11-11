@@ -466,8 +466,14 @@ template <class vertex> void compute(graph<vertex> &G, commandLine config) {
   // global_info.computeInWeights();
 
   cout << "Initializing engine ....\n";
+
+  #ifndef NO_ATOMIC
   GraphBoltEngineSimple<vertex, double, double, CoemInfo<vertex>> engine(
       G, max_iters, global_info, false, config);
+  #else
+  GraphBoltEngineSimple<vertex, double, double, CoemInfo<vertex>> engine(
+      G, max_iters, global_info, true, config);
+  #endif
   engine.init();
   cout << "Finished init\n";
   engine.run();

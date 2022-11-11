@@ -197,9 +197,13 @@ public:
               // lock if needed
               if (ret) {
                 if (use_lock) {
-                  // vertex_locks[v].writeLock();
+                  #ifndef NO_ATOMIC
+                  vertex_locks[v].writeLock();
+                  #endif
                   addToAggregation(contrib_change, delta[v], global_info);
-                  // vertex_locks[v].unlock();
+                  #ifndef NO_ATOMIC
+                  vertex_locks[v].unlock();
+                  #endif
                 } else {
                   addToAggregationAtomic(contrib_change, delta[v], global_info);
                 }
@@ -369,10 +373,14 @@ public:
                          vertex_values[0][source], contrib_change, global_info);
         if (ret) {
           if (use_lock) {
-            // vertex_locks[destination].writeLock();
+            #ifndef NO_ATOMIC
+            vertex_locks[destination].writeLock();
+            #endif
             addToAggregation(contrib_change, delta[destination],
                              global_info_old);
-            // vertex_locks[destination].unlock();
+            #ifndef NO_ATOMIC
+            vertex_locks[destination].unlock();
+            #endif
           } else {
             addToAggregationAtomic(contrib_change, delta[destination],
                                    global_info_old);
@@ -426,10 +434,14 @@ public:
                          vertex_values[0][source], contrib_change, global_info);
         if (ret) {
           if (use_lock) {
-            // vertex_locks[destination].writeLock();
+            #ifndef NO_ATOMIC
+            vertex_locks[destination].writeLock();
+            #endif
             removeFromAggregation(contrib_change, delta[destination],
                                   global_info_old);
-            // vertex_locks[destination].unlock();
+            #ifndef NO_ATOMIC
+            vertex_locks[destination].unlock();
+            #endif
           } else {
             removeFromAggregationAtomic(contrib_change, delta[destination],
                                         global_info_old);
@@ -564,14 +576,18 @@ public:
 
             if (ret || ret_old) {
               if (use_lock) {
-                // vertex_locks[v].writeLock();
+                #ifndef NO_ATOMIC
+                vertex_locks[v].writeLock();
+                #endif
                 if (ret_old) {
                   removeFromAggregation(to_retract, delta[v], global_info_old);
                 }
                 if (ret) {
                   addToAggregation(to_propagate, delta[v], global_info);
                 }
-                // vertex_locks[v].unlock();
+                #ifndef NO_ATOMIC
+                vertex_locks[v].unlock();
+                #endif
 
               } else {
                 removeFromAggregationAtomic(to_retract, delta[v],
@@ -712,10 +728,14 @@ public:
           }
           if (ret) {
             if (use_lock) {
-              // vertex_locks[destination].writeLock();
+              #ifndef NO_ATOMIC
+              vertex_locks[destination].writeLock();
+              #endif
               addToAggregation(contrib_change_old, delta[destination],
                                global_info_old);
-              // vertex_locks[destination].unlock();
+              #ifndef NO_ATOMIC
+              vertex_locks[destination].unlock();
+              #endif
             } else {
               addToAggregationAtomic(contrib_change_old, delta[destination],
                                      global_info_old);
@@ -773,10 +793,14 @@ public:
           }
           if (ret) {
             if (use_lock) {
-              // vertex_locks[destination].writeLock();
+              #ifndef NO_ATOMIC
+              vertex_locks[destination].writeLock();
+              #endif
               removeFromAggregation(contrib_change_old, delta[destination],
                                     global_info_old);
-              // vertex_locks[destination].unlock();
+              #ifndef NO_ATOMIC
+              vertex_locks[destination].unlock();
+              #endif
 
             } else {
               removeFromAggregationAtomic(contrib_change_old,

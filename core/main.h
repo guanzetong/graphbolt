@@ -56,18 +56,14 @@ int parallel_main(int argc, char *argv[]) {
         readGraph<symmetricVertex>(iFile, symmetric, simpleFlag, debugFlag);
     G.setSymmetric(true);
     cout << "Graph created" << endl;
-    // SimRoiStart();
     compute(G, P);
-    // SimRoiEnd();
     G.del();
   } else {
     // asymmetric graph
     graph<asymmetricVertex> G =
         readGraph<asymmetricVertex>(iFile, symmetric, simpleFlag, debugFlag);
     cout << "Graph created" << endl;
-    // SimRoiStart();
     compute(G, P);
-    // SimRoiEnd();
     G.del();
   }
 }
