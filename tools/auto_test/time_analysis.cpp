@@ -1,3 +1,9 @@
+// =======================================================================
+// time_analysis.cpp
+// This program is for extracting profiling data from GraphBolt printouts.
+// =======================================================================
+
+
 #include <fstream>
 #include <iostream>
 #include <string>
