@@ -40,3 +40,9 @@ nCores=`expr $nWorkers / $nSMT`
 -nWorkers $nWorkers -numberOfUpdateBatches 1 \
 -nEdges $nEdges -maxIters 1000 \
 -streamPath $streamPath $initPath
+
+cd ${outputDir}
+../tools/cpistack.py > cpistack.txt
+cd viz/
+python -m SimpleHTTPServer 8080
+cd ..
