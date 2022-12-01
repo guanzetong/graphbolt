@@ -27,7 +27,6 @@
 #include "../graph/IO.h"
 #include "../graph/graph.h"
 #include <string>
-#include "../../../sniper/include/sim_api.h"
 
 /**
  * Used to extract values from the binary stream
@@ -230,6 +229,13 @@ public:
         while (ss >> buf) {
           tokens.push_back(buf);
         }
+
+        cerr << "[DEBUG-SANJAY] tokens: " << endl;
+        for (auto& token : tokens) {
+          cerr << token << ' ';
+        }
+        cerr << endl;
+
 #ifdef EDGEDATA
         if (tokens.size() == 4) {
           edgeType = tokens[0].at(0);
