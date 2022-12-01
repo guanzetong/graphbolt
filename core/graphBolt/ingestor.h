@@ -497,6 +497,7 @@ public:
 #endif
   }
 
+  // ztguan: This function reads from file and applies one streaming batch to the data graph
   bool processNextBatch() {
     current_batch++;
     if (current_batch > number_of_batches) {
