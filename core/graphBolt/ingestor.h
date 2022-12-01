@@ -27,7 +27,6 @@
 #include "../graph/IO.h"
 #include "../graph/graph.h"
 #include <string>
-#include "../../../sniper/include/sim_api.h"
 
 /**
  * Used to extract values from the binary stream
@@ -230,6 +229,13 @@ public:
         while (ss >> buf) {
           tokens.push_back(buf);
         }
+
+        cerr << "[DEBUG-SANJAY] tokens: " << endl;
+        for (auto& token : tokens) {
+          cerr << token << ' ';
+        }
+        cerr << endl;
+
 #ifdef EDGEDATA
         if (tokens.size() == 4) {
           edgeType = tokens[0].at(0);
@@ -497,6 +503,7 @@ public:
 #endif
   }
 
+  // ztguan: This function reads from file and applies one streaming batch to the data graph
   bool processNextBatch() {
     current_batch++;
     if (current_batch > number_of_batches) {
