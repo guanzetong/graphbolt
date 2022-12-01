@@ -13,8 +13,8 @@ int main (int argc, char *argv[]) {
     // Initialization
     commandLine P(argc, argv);                                      //  Command line input arguments
     char *graph_struct_file = P.getArgument(0);                     //  Get the data graph file path
-    graph<symmetricVertex> G =
-        readGraph<symmetricVertex>(graph_struct_file, 0, 0, 0);     //  Read the data graph from file
+    graph<asymmetricVertex> G =
+        readGraph<asymmetricVertex>(graph_struct_file, 0, 0, 0);     //  Read the data graph from file
     int *vertex_prop = newA(int, G.n);                              //  Allocate vertex property array
 
     //
@@ -22,7 +22,7 @@ int main (int argc, char *argv[]) {
     //
 
 
-    Ingestor<symmetricVertex> ingestor(G, P);                       //  Create an ingestor object for streaming
+    Ingestor<asymmetricVertex> ingestor(G, P);                       //  Create an ingestor object for streaming
     ingestor.validateAndOpenFifo();                                 //  Open the streaming file
     while (ingestor.processNextBatch()) {
         edgeArray &edge_additions = ingestor.getEdgeAdditions();    //  Return added edges, useful for pruning computation

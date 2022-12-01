@@ -66,6 +66,9 @@ BFS_%: BFS.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
 GPM_MVP :  GPM_MVP.C $(COMMON) $(GRAPH)
 	$(PCC) $(PCFLAGS) $< $(LDFLAGS) -o $@
 
+triangle_counting_MVP :  triangle_counting_MVP.cpp $(COMMON) $(GRAPH)
+	$(PCC) $(PCFLAGS) $< $(LDFLAGS) -o $@
+
 # Normal compilation. No ROI.
 % : %.C $(COMMON) $(GRAPH) $(GRAPHBOLT) $(OTHERS)
 	$(PCC) $(PCFLAGS) $(SNIPER) $(PARFLAGS) $< $(LDFLAGS) -o $@
