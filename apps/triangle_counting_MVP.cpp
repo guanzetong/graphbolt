@@ -40,12 +40,18 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
         const int node1_in_degree = G.V[node1].getInDegree();
         const int node1_out_degree = G.V[node1].getOutDegree();
         const int node1_degree = node1_in_degree + node1_out_degree;
+        std::unordered_set<int> node1_neighbors;
         for (int node1_neighbour = 0; node1_neighbour < node1_degree; ++node1_neighbour) {
             int node2_temp;
             if (node1_neighbour < node1_in_degree){
                 node2_temp = G.V[node1].getInNeighbor(node1_neighbour);
             } else {
                 node2_temp = G.V[node1].getOutNeighbor(node1_neighbour - node1_in_degree);
+            }
+            if( node1_neighbors.count(node2_temp) == 0) {
+                node1_neighbors.insert(node2_temp);
+            } else {
+                continue;
             }
             const int node2 = node2_temp;
 
@@ -56,6 +62,7 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
             const int node2_in_degree = G.V[node2].getInDegree();
             const int node2_out_degree = G.V[node2].getOutDegree();
             const int node2_degree = node2_in_degree + node2_out_degree;
+            std::unordered_set<int> node2_neighbors;
             for (int node2_neighbour = 0; node2_neighbour < node2_degree; ++node2_neighbour) {
                 int node3_temp;
                 if (node2_neighbour < node2_in_degree) {
@@ -63,6 +70,13 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
                 } else {
                     node3_temp = G.V[node2].getOutNeighbor(node2_neighbour - node2_in_degree);
                 }
+
+                if (node2_neighbors.count(node3_temp) == 0){
+                    node2_neighbors.insert(node3_temp);
+                } else {
+                    continue;
+                }
+                
                 const int node3 = node3_temp;
 
                 if (node3 < node2) {
@@ -72,18 +86,37 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
                 const int node3_in_degree = G.V[node3].getInDegree();
                 const int node3_out_degree = G.V[node3].getOutDegree();
                 const int node3_degree = node3_in_degree + node3_out_degree;
+                std::unordered_set<int> node3_neighbors;
                 for (int node3_neighbour = 0; node3_neighbour < node3_degree; ++node3_neighbour) {
+                    int node4_temp;
                     if (node3_neighbour < node3_in_degree) {
-                        if(G.V[node3].getInNeighbor(node3_neighbour) == node1) {
-                            std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
-                            ++count;
-                        }
+                        node4_temp = G.V[node3].getInNeighbor(node3_neighbour);
                     } else {
-                        if(G.V[node3].getOutNeighbor(node3_neighbour - node3_in_degree) == node1) {
-                            std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
-                            ++count;
-                        }
+                        node4_temp = G.V[node3].getOutNeighbor(node3_neighbour - node3_in_degree);
                     }
+
+                    if (node3_neighbors.count(node4_temp) == 0) {
+                        node3_neighbors.insert(node4_temp);
+                    } else {
+                        continue;
+                    }
+                    
+                    if (node4_temp == node1){
+                        std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
+                        ++count;
+                    }
+                    
+                    // if (node3_neighbour < node3_in_degree) {
+                    //     if(G.V[node3].getInNeighbor(node3_neighbour) == node1) {
+                    //         std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
+                    //         ++count;
+                    //     }
+                    // } else {
+                    //     if(G.V[node3].getOutNeighbor(node3_neighbour - node3_in_degree) == node1) {
+                    //         std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
+                    //         ++count;
+                    //     }
+                    // }
                 }
             }
         }
