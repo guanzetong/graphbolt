@@ -3,6 +3,7 @@
 #include "../core/graph/graph.h"
 #include "../core/graph/vertex.h"
 #include "../core/graphBolt/ingestor.h"
+#include "../core/common/parallel.h"
 
 using namespace std;
 
@@ -36,7 +37,7 @@ int main (int argc, char *argv[]) {
 unsigned long search_triangles(graph<asymmetricVertex> &G) {
     unsigned long count = 0;
 
-    for (int node1 = 0; node1 < G.n; ++node1) {
+    parallel_for (int node1 = 0; node1 < G.n; ++node1) {
         const int node1_in_degree = G.V[node1].getInDegree();
         const int node1_out_degree = G.V[node1].getOutDegree();
         const int node1_degree = node1_in_degree + node1_out_degree;
@@ -103,20 +104,9 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
                     
                     if (node4_temp == node1){
                         std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
+                        #pragma omp atomic update
                         ++count;
                     }
-                    
-                    // if (node3_neighbour < node3_in_degree) {
-                    //     if(G.V[node3].getInNeighbor(node3_neighbour) == node1) {
-                    //         std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
-                    //         ++count;
-                    //     }
-                    // } else {
-                    //     if(G.V[node3].getOutNeighbor(node3_neighbour - node3_in_degree) == node1) {
-                    //         std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
-                    //         ++count;
-                    //     }
-                    // }
                 }
             }
         }
