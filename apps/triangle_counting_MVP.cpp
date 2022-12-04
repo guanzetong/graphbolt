@@ -13,22 +13,31 @@ int main (int argc, char *argv[]) {
     // Initialization
     commandLine P(argc, argv);                                      //  Command line input arguments
     char *graph_struct_file = P.getArgument(0);                     //  Get the data graph file path
+    int n_workers = P.getOptionIntValue("-nWorkers", getWorkers());
+    setCustomWorkers(n_workers);
     graph<asymmetricVertex> G =
         readGraph<asymmetricVertex>(graph_struct_file, 0, 0, 0);     //  Read the data graph from file
     int *vertex_prop = newA(int, G.n);                              //  Allocate vertex property array
 
     // Do initial computation here
+    timer compute_timer;
+    compute_timer.start();
     unsigned long count = search_triangles(G);
+    std::cout << "Initial compute time: " << compute_timer.stop() << "\n";
     std::cout << "Num Matches " << count << '\n';
 
     Ingestor<asymmetricVertex> ingestor(G, P);                       //  Create an ingestor object for streaming
     ingestor.validateAndOpenFifo();                                 //  Open the streaming file
+    int batch_idx = 0;
     while (ingestor.processNextBatch()) {
+        batch_idx++;
         edgeArray &edge_additions = ingestor.getEdgeAdditions();    //  Return added edges, useful for pruning computation
         edgeArray &edge_deletions = ingestor.getEdgeDeletions();    //  Return deleted edges, useful for pruning computation
 
         // Do delta-based computation or traditional computation here
+        compute_timer.start();
         unsigned long count = search_triangles(G);
+        std::cout << "Batch " << batch_idx << " compute time: " << compute_timer.stop() << "\n";
         std::cout << "Num Matches " << count << '\n';
     }
     return 0;
@@ -103,7 +112,7 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
                     }
                     
                     if (node4_temp == node1){
-                        std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
+                        // std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
                         #pragma omp atomic update
                         ++count;
                     }
