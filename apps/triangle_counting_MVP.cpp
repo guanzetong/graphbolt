@@ -4,8 +4,8 @@
 #include "../core/graph/vertex.h"
 #include "../core/graphBolt/ingestor.h"
 #include "../core/common/parallel.h"
-
-using namespace std;
+#include <chrono>
+#include <ctime>
 
 unsigned long search_triangles(graph<asymmetricVertex> &G);
 
@@ -45,6 +45,9 @@ int main (int argc, char *argv[]) {
 
 unsigned long search_triangles(graph<asymmetricVertex> &G) {
     unsigned long count = 0;
+    unsigned long vertex_count = 0;
+    double percentage = 0;
+    double target = 0;
 
     parallel_for (int node1 = 0; node1 < G.n; ++node1) {
         const int node1_in_degree = G.V[node1].getInDegree();
@@ -119,7 +122,21 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
                 }
             }
         }
-        
+        #pragma omp atomic update
+        ++vertex_count;
+
+        #pragma omp critical
+        {
+            percentage = (double)vertex_count / (double)G.n;
+            // std::cout << "Percentage: " << percentage << endl;
+            if (percentage >= target)
+            {
+                auto current = std::chrono::system_clock::now();
+                std::time_t current_time = std::chrono::system_clock::to_time_t(current);
+                std::cout << "Progress: " << target * 100 << "%, at " << std::ctime(&current_time);
+                target += 0.05;
+            }
+        }
     }
 
     return count;
