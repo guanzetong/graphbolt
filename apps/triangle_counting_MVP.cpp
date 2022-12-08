@@ -22,9 +22,13 @@ int main (int argc, char *argv[]) {
     // Do initial computation here
     timer compute_timer;
     compute_timer.start();
+
+    auto current = std::chrono::system_clock::now();
+    std::time_t current_time = std::chrono::system_clock::to_time_t(current);
+    std::cout << "Initial compute start at " << std::ctime(&current_time);
     unsigned long count = search_triangles(G);
-    std::cout << "Initial compute time: " << compute_timer.stop() << "\n";
-    std::cout << "Num Matches " << count << '\n';
+    std::cout << "Initial compute time: " << compute_timer.stop() << endl;
+    std::cout << "Num Matches " << count << endl;
 
     Ingestor<asymmetricVertex> ingestor(G, P);                       //  Create an ingestor object for streaming
     ingestor.validateAndOpenFifo();                                 //  Open the streaming file
@@ -37,8 +41,8 @@ int main (int argc, char *argv[]) {
         // Do delta-based computation or traditional computation here
         compute_timer.start();
         unsigned long count = search_triangles(G);
-        std::cout << "Batch " << batch_idx << " compute time: " << compute_timer.stop() << "\n";
-        std::cout << "Num Matches " << count << '\n';
+        std::cout << "Batch " << batch_idx << " compute time: " << compute_timer.stop() << endl;
+        std::cout << "Num Matches " << count << endl;
     }
     return 0;
 }
@@ -115,7 +119,7 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
                     }
                     
                     if (node4_temp == node1){
-                        // std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << '\n'; 
+                        // std::cout << "Match:" << node1 << "->" << node2 << "->" << node3 << endl; 
                         #pragma omp atomic update
                         ++count;
                     }
@@ -134,7 +138,7 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
                 auto current = std::chrono::system_clock::now();
                 std::time_t current_time = std::chrono::system_clock::to_time_t(current);
                 std::cout << "Progress: " << target * 100 << "%, at " << std::ctime(&current_time);
-                target += 0.05;
+                target += 0.0001;
             }
         }
     }
