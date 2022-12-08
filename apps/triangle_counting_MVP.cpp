@@ -1,9 +1,9 @@
-#include "../core/common/parallel.h"
 #include "../core/common/utils.h"
 #include "../core/graph/IO.h"
 #include "../core/graph/graph.h"
 #include "../core/graph/vertex.h"
 #include "../core/graphBolt/ingestor.h"
+#include "../core/common/parallel.h"
 #include <chrono>
 #include <ctime>
 
@@ -12,7 +12,7 @@ static auto current = std::chrono::system_clock::now();
 std::string get_current_time_str() {
   static time_t now;
   now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-  return std::ctime(&now)
+  return std::ctime(&now);
 }
 
 unsigned long search_triangles(graph<asymmetricVertex> &G);
@@ -156,7 +156,7 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
 #pragma omp atomic update
     ++vertex_count;
 
-#pragma omp single nowait
+#pragma omp critical
     {
       percentage = (double)vertex_count / (double)G.n;
       // std::cout << "Percentage: " << percentage << endl;
