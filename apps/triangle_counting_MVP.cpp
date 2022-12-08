@@ -7,17 +7,27 @@
 #include <chrono>
 #include <ctime>
 
+static auto current = std::chrono::system_clock::now();
+
+std::string get_current_time_str() {
+    static time_t now;
+    now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    return std::ctime(&now)
+}
+
 unsigned long search_triangles(graph<asymmetricVertex> &G);
 
 int main (int argc, char *argv[]) {
     // Initialization
+    std::cout << "Parsing options @ " << get_current_time_str() << std::endl;
     commandLine P(argc, argv);                                      //  Command line input arguments
     char *graph_struct_file = P.getArgument(0);                     //  Get the data graph file path
     int n_workers = P.getOptionIntValue("-nWorkers", getWorkers());
     setCustomWorkers(n_workers);
+    std::cout << "Reading Graph File @ " << get_current_time_str() << std::endl;
     graph<asymmetricVertex> G =
         readGraph<asymmetricVertex>(graph_struct_file, 0, 0, 0);     //  Read the data graph from file
-    int *vertex_prop = newA(int, G.n);                              //  Allocate vertex property array
+    // int *vertex_prop = newA(int, G.n);                              //  Allocate vertex property array
 
     // Do initial computation here
     timer compute_timer;
@@ -27,7 +37,7 @@ int main (int argc, char *argv[]) {
     std::time_t current_time = std::chrono::system_clock::to_time_t(current);
     std::cout << "Initial compute start at " << std::ctime(&current_time);
     unsigned long count = search_triangles(G);
-    std::cout << "Initial compute time: " << compute_timer.stop() << endl;
+    std::cout << "Initial compute time: " << compute_timer.stop() << std::endl;
     std::cout << "Num Matches " << count << endl;
 
     Ingestor<asymmetricVertex> ingestor(G, P);                       //  Create an ingestor object for streaming
@@ -35,6 +45,7 @@ int main (int argc, char *argv[]) {
     int batch_idx = 0;
     while (ingestor.processNextBatch()) {
         batch_idx++;
+
         edgeArray &edge_additions = ingestor.getEdgeAdditions();    //  Return added edges, useful for pruning computation
         edgeArray &edge_deletions = ingestor.getEdgeDeletions();    //  Return deleted edges, useful for pruning computation
 
@@ -52,6 +63,8 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
     unsigned long vertex_count = 0;
     double percentage = 0;
     double target = 0;
+
+    std::cout << "omp_get_num_threads() = " << omp_get_num_threads() << " @ " << get_current_time_str() << std::endl;
 
     parallel_for (int node1 = 0; node1 < G.n; ++node1) {
         const int node1_in_degree = G.V[node1].getInDegree();
@@ -129,7 +142,7 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
         #pragma omp atomic update
         ++vertex_count;
 
-        #pragma omp critical
+        #pragma omp single nowait
         {
             percentage = (double)vertex_count / (double)G.n;
             // std::cout << "Percentage: " << percentage << endl;
@@ -137,7 +150,7 @@ unsigned long search_triangles(graph<asymmetricVertex> &G) {
             {
                 auto current = std::chrono::system_clock::now();
                 std::time_t current_time = std::chrono::system_clock::to_time_t(current);
-                std::cout << "Progress: " << target * 100 << "%, at " << std::ctime(&current_time);
+                std::cout << "Progress: " << target * 100 << "%, at " << std::ctime(&current_time) << std::endl;
                 target += 0.0001;
             }
         }
